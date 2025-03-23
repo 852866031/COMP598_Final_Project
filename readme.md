@@ -48,6 +48,7 @@ pip install transformers datasets accelerate peft bitsandbytes
 pip install blobfile
 pip install sentencepiece
 pip install protobuf
+pip install peft
 ```
 ---
 

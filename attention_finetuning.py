@@ -27,18 +27,34 @@ def load_or_download_model(model_name: str, local_dir: str):
     return tokenizer, model
 
 
+def freeze_except_attention(model):
+    for name, param in model.named_parameters():
+        if any(key in name for key in ["q_proj", "k_proj", "v_proj", "o_proj"]):
+            param.requires_grad = True
+        else:
+            param.requires_grad = False
+
+
 def print_trainable_params(model):
     total = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Trainable parameters: {trainable:,} / {total:,} ({100 * trainable / total:.2f}%)")
 
 
+# === Load model and tokenizer ===
 model_name = "meta-llama/Llama-3.2-1B"
 local_model_path = "models/llama-3.2-1b"
 tokenizer, model = load_or_download_model(model_name, local_model_path)
-output_dir = "output_models/full"
+
+# === Freeze everything except attention layers ===
+freeze_except_attention(model)
+model.gradient_checkpointing_enable()
+model.enable_input_require_grads()
+model.config.use_cache = False
+
 print_trainable_params(model)
 
+# === Dataset ===
 dataset = load_dataset("wikitext", "wikitext-2-raw-v1")
 
 def tokenize_fn(example):
@@ -52,6 +68,8 @@ def tokenize_fn(example):
 tokenized_dataset = dataset.map(tokenize_fn, batched=True, remove_columns=["text"])
 data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
+# === Training Arguments ===
+output_dir = "output_models/attention"
 training_args = TrainingArguments(
     output_dir=output_dir,
     evaluation_strategy="steps",
@@ -67,6 +85,7 @@ training_args = TrainingArguments(
     report_to="none",
 )
 
+# === Trainer ===
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -76,4 +95,5 @@ trainer = Trainer(
     data_collator=data_collator,
 )
 
+# === Train ===
 trainer.train()
