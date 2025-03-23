@@ -1,10 +1,10 @@
-# 🔧 OpenLLaMA-3B Fine-Tuning Setup
+# COMP 598 Final Project
 
-This project demonstrates [OpenLLaMA-3B](https://huggingface.co/openlm-research/open_llama_3b) model
+This project fine-tunes [Llama-3.2-1b](https://huggingface.co/meta-llama/Llama-3.2-1B) model with difference fine-tuning methods, and compares their impact on privacy.
 
 ---
 
-## 📁 Requirements
+## Requirements
 
 - Python 3.10+
 - Conda (Miniconda or Anaconda)
@@ -51,7 +51,7 @@ pip install protobuf
 ```
 ---
 
-## ✅ Verifying Setup
+## Verifying Setup
 
 ```bash
 python -c "import torch; print(torch.cuda.get_device_name(0))"

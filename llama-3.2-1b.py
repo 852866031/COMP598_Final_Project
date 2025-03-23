@@ -13,11 +13,11 @@ from datasets import load_dataset
 
 def load_or_download_model(model_name: str, local_dir: str):
     if os.path.exists(local_dir) and os.path.isdir(local_dir):
-        print(f"🔄 Loading model from local directory: {local_dir}")
+        print(f"Loading model from local directory: {local_dir}")
         tokenizer = AutoTokenizer.from_pretrained(local_dir)
         model = AutoModelForCausalLM.from_pretrained(local_dir)
     else:
-        print(f"⬇️ Downloading model '{model_name}' to: {local_dir}")
+        print(f"Downloading model '{model_name}' to: {local_dir}")
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForCausalLM.from_pretrained(model_name)
         tokenizer.save_pretrained(local_dir)
@@ -33,14 +33,12 @@ def print_trainable_params(model):
     print(f"Trainable parameters: {trainable:,} / {total:,} ({100 * trainable / total:.2f}%)")
 
 
-# ==== Setup ====
 model_name = "meta-llama/Llama-3.2-1B"
 local_model_path = "models/llama-3.2-1b"
 tokenizer, model = load_or_download_model(model_name, local_model_path)
 output_dir = "output_models"
 print_trainable_params(model)
 
-# ==== Dataset ====
 dataset = load_dataset("wikitext", "wikitext-2-raw-v1")
 
 def tokenize_fn(example):
@@ -54,7 +52,6 @@ def tokenize_fn(example):
 tokenized_dataset = dataset.map(tokenize_fn, batched=True, remove_columns=["text"])
 data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
-# ==== Training ====
 training_args = TrainingArguments(
     output_dir=output_dir,
     evaluation_strategy="steps",

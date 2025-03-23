@@ -3,7 +3,7 @@ from transformers import AutoTokenizer
 import numpy as np
 
 # Load tokenizer
-print("🔤 Loading tokenizer...")
+print("Loading tokenizer...")
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
 tokenizer.pad_token = tokenizer.eos_token
 
@@ -28,10 +28,10 @@ def tokenize_and_measure(example):
     return {"length": len(tokens)}
 
 # Analyze each split
-print("\n📊 Token Length Stats per BBQ Split:\n")
+print("\nToken Length Stats per BBQ Split:\n")
 
 for axis in bias_axes:
-    print(f"🔍 Processing split: {axis}")
+    print(f"Processing split: {axis}")
     ds = load_dataset("walledai/BBQ", split=axis)
     ds = ds.map(tokenize_and_measure, desc=f"Tokenizing [{axis}]", batched=False)
 
