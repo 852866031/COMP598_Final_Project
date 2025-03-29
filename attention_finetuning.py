@@ -9,7 +9,7 @@ from transformers import (
 )
 
 from preprocess import get_bbq_preprocessed_dataset
-from utilities import compute_metrics
+from utilities import compute_metrics, remove_dir_if_exists
 
 def load_or_download_model(model_name: str, local_dir: str):
     if os.path.exists(local_dir) and os.path.isdir(local_dir):
@@ -59,6 +59,7 @@ print_trainable_params(model)
 train_dataset, eval_dataset, data_collator = get_bbq_preprocessed_dataset(tokenizer)
 # === Training Arguments ===
 output_dir = "output_models/attention"
+remove_dir_if_exists(output_dir)
 training_args = TrainingArguments(
     output_dir=output_dir,
     evaluation_strategy="steps",

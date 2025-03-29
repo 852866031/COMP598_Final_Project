@@ -2,7 +2,7 @@
 from datasets import load_dataset
 from transformers import DataCollatorWithPadding
    
-dataset = load_dataset("walledai/BBQ")["genderIdentity"]
+dataset = load_dataset("walledai/BBQ")["raceXGender"]
 dataset = dataset.remove_columns("category")
 
 def get_bbq_preprocessed_dataset(tokenizer):

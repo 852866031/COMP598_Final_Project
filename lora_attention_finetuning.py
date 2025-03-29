@@ -8,35 +8,27 @@ from transformers import (
 )
 from peft import get_peft_model, LoraConfig, TaskType
 from preprocess import get_bbq_preprocessed_dataset
-from utilities import compute_metrics
+from utilities import compute_metrics, remove_dir_if_exists
 
-def load_model_with_lora(model_name: str, local_dir: str):
-    if os.path.exists(local_dir) and os.path.isdir(local_dir):
-        print(f"🔄 Loading model from local directory: {local_dir}")
-        tokenizer = AutoTokenizer.from_pretrained(local_dir)
-        model = AutoModelForSequenceClassification.from_pretrained(local_dir, num_labels=3)
-    else:
-        print(f"⬇️ Downloading model '{model_name}' to: {local_dir}")
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=3)
-        tokenizer.save_pretrained(local_dir)
-        model.save_pretrained(local_dir)
+def load_model_with_lora(base_model_path="models/gpt2_class"):
+    if not os.path.exists(base_model_path):
+        raise FileNotFoundError(f"Model not found at {base_model_path}. Train it first with GPT-2 on 3-class data.")
 
+    print(f"🔄 Loading pretrained model from: {base_model_path}")
+    tokenizer = AutoTokenizer.from_pretrained(base_model_path)
+    model = AutoModelForSequenceClassification.from_pretrained(base_model_path, num_labels=3)
     tokenizer.pad_token = tokenizer.eos_token
     model.config.pad_token_id = tokenizer.pad_token_id
-
-
-    # Setup LoRA config
+    # === Setup LoRA config ===
     lora_config = LoraConfig(
         r=8,
         lora_alpha=32,
-        target_modules=["q_proj", "v_proj"],
+        target_modules=["c_attn", "c_proj"],
         lora_dropout=0.05,
         bias="none",
         task_type=TaskType.SEQ_CLS,
     )
-
-    # Wrap with PEFT
+    # === Apply LoRA ===
     model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()
 
@@ -44,15 +36,15 @@ def load_model_with_lora(model_name: str, local_dir: str):
 
 
 # === Setup ===
-model_name = "meta-llama/Llama-3.2-1B"
-local_model_path = "models/llama-3.2-1b"
-tokenizer, model = load_model_with_lora(model_name, local_model_path)
+local_model_path = "models/gpt2_class"
+tokenizer, model = load_model_with_lora(local_model_path)
 
 # === Dataset ===
 train_dataset, eval_dataset, data_collator = get_bbq_preprocessed_dataset(tokenizer)
 
 # === Training ===
 output_dir = "output_models/lora_attention"
+remove_dir_if_exists(output_dir)
 training_args = TrainingArguments(
     output_dir=output_dir,
     evaluation_strategy="steps",
@@ -61,7 +53,7 @@ training_args = TrainingArguments(
     save_steps=500,
     per_device_train_batch_size=16,
     gradient_accumulation_steps=2,
-    num_train_epochs=10,
+    num_train_epochs=5,
     learning_rate=2e-4,
     fp16=True,
     logging_steps=100,

@@ -9,7 +9,7 @@ from transformers import (
 from peft import get_peft_model, PromptTuningConfig, TaskType, PromptTuningInit
 from datasets import load_dataset
 from preprocess import get_bbq_preprocessed_dataset
-from utilities import compute_metrics
+from utilities import compute_metrics, remove_dir_if_exists
 
 
 def load_model_with_prompt_tuning(model_name: str, local_dir: str):
@@ -50,7 +50,8 @@ tokenizer, model = load_model_with_prompt_tuning(model_name, local_model_path)
 train_dataset, eval_dataset, data_collator = get_bbq_preprocessed_dataset(tokenizer)
 
 # === Training Args ===
-output_dir = "output_prompt_tuned"
+output_dir = "output_models/prompt"
+remove_dir_if_exists(output_dir)
 training_args = TrainingArguments(
     output_dir=output_dir,
     evaluation_strategy="steps",
