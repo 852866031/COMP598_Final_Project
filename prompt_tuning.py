@@ -35,7 +35,7 @@ def load_model_with_prompt_tuning(model_name: str, local_dir: str):
         num_virtual_tokens=20,
         tokenizer_name_or_path=model_name,
     )
-
+    modules_to_save=None,
     model = get_peft_model(model, prompt_config)
     model.print_trainable_parameters()
     return tokenizer, model
