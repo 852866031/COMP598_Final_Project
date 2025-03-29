@@ -2,28 +2,29 @@ import os
 import torch
 from transformers import (
     AutoTokenizer,
-    AutoModelForCausalLM,
     Trainer,
     TrainingArguments,
-    DataCollatorForLanguageModeling,
+    AutoModelForSequenceClassification
 )
 from peft import get_peft_model, LoraConfig, TaskType
-from datasets import load_dataset
-
+from preprocess import get_bbq_preprocessed_dataset
+from utilities import compute_metrics
 
 def load_model_with_lora(model_name: str, local_dir: str):
     if os.path.exists(local_dir) and os.path.isdir(local_dir):
         print(f"🔄 Loading model from local directory: {local_dir}")
         tokenizer = AutoTokenizer.from_pretrained(local_dir)
-        model = AutoModelForCausalLM.from_pretrained(local_dir)
+        model = AutoModelForSequenceClassification.from_pretrained(local_dir, num_labels=3)
     else:
         print(f"⬇️ Downloading model '{model_name}' to: {local_dir}")
         tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForCausalLM.from_pretrained(model_name)
+        model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=3)
         tokenizer.save_pretrained(local_dir)
         model.save_pretrained(local_dir)
 
     tokenizer.pad_token = tokenizer.eos_token
+    model.config.pad_token_id = tokenizer.pad_token_id
+
 
     # Setup LoRA config
     lora_config = LoraConfig(
@@ -32,7 +33,7 @@ def load_model_with_lora(model_name: str, local_dir: str):
         target_modules=["q_proj", "v_proj"],
         lora_dropout=0.05,
         bias="none",
-        task_type=TaskType.CAUSAL_LM,
+        task_type=TaskType.SEQ_CLS,
     )
 
     # Wrap with PEFT
@@ -48,30 +49,19 @@ local_model_path = "models/llama-3.2-1b"
 tokenizer, model = load_model_with_lora(model_name, local_model_path)
 
 # === Dataset ===
-dataset = load_dataset("wikitext", "wikitext-2-raw-v1")
-
-def tokenize_fn(example):
-    return tokenizer(
-        example["text"],
-        truncation=True,
-        padding="max_length",
-        max_length=150,
-    )
-
-tokenized_dataset = dataset.map(tokenize_fn, batched=True, remove_columns=["text"])
-data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+train_dataset, eval_dataset, data_collator = get_bbq_preprocessed_dataset(tokenizer)
 
 # === Training ===
 output_dir = "output_models/lora_attention"
 training_args = TrainingArguments(
     output_dir=output_dir,
     evaluation_strategy="steps",
-    eval_steps=500,
+    eval_steps=200,
     save_strategy="steps",
     save_steps=500,
     per_device_train_batch_size=16,
     gradient_accumulation_steps=2,
-    num_train_epochs=3,
+    num_train_epochs=10,
     learning_rate=2e-4,
     fp16=True,
     logging_steps=100,
@@ -82,14 +72,14 @@ training_args = TrainingArguments(
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=tokenized_dataset["train"],
-    eval_dataset=tokenized_dataset["validation"],
+    train_dataset=train_dataset,
+    eval_dataset=eval_dataset,
     tokenizer=tokenizer,
     data_collator=data_collator,
+    compute_metrics=compute_metrics,
 )
-
 # === Train ===
-trainer.train()
+trainer.train(resume_from_checkpoint=False)
 
 # === Save only the LoRA adapter ===
 model.save_pretrained(os.path.join(output_dir, "lora"))
