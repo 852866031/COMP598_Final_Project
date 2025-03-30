@@ -12,18 +12,13 @@ from datasets import load_dataset
 from preprocess import get_bbq_preprocessed_dataset
 from utilities import compute_metrics, remove_dir_if_exists
 
-def load_or_download_model(model_name: str, local_dir: str):
-    if os.path.exists(local_dir) and os.path.isdir(local_dir):
-        print(f"🔄 Loading model from local directory: {local_dir}")
-        tokenizer = AutoTokenizer.from_pretrained(local_dir)
-        model = AutoModelForSequenceClassification.from_pretrained(local_dir, num_labels=3)
-    else:
-        print(f"⬇️ Downloading model '{model_name}' to: {local_dir}")
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=3)
-        tokenizer.save_pretrained(local_dir)
-        model.save_pretrained(local_dir)
+def load_or_download_model(base_model_path):
+    if not os.path.exists(base_model_path):
+        raise FileNotFoundError(f"Model not found at {base_model_path}. Train it first with GPT-2 on 3-class data.")
 
+    print(f"🔄 Loading pretrained model from: {base_model_path}")
+    tokenizer = AutoTokenizer.from_pretrained(base_model_path)
+    model = AutoModelForSequenceClassification.from_pretrained(base_model_path, num_labels=3)
     tokenizer.pad_token = tokenizer.eos_token
     model.config.pad_token_id = tokenizer.pad_token_id
     return tokenizer, model
@@ -35,9 +30,8 @@ def print_trainable_params(model):
     print(f"Trainable parameters: {trainable:,} / {total:,} ({100 * trainable / total:.2f}%)")
 
 
-model_name = "meta-llama/Llama-3.2-1B"
-local_model_path = "models/llama-3.2-1b"
-tokenizer, model = load_or_download_model(model_name, local_model_path)
+local_model_path = "models/gpt2_biased_cls"
+tokenizer, model = load_or_download_model(local_model_path)
 
 print_trainable_params(model)
 
@@ -47,14 +41,14 @@ output_dir = "output_models/full"
 remove_dir_if_exists(output_dir)
 training_args = TrainingArguments(
     output_dir=output_dir,
-    evaluation_strategy="steps",
+    eval_strategy="steps",
     eval_steps=200,
     save_strategy="steps",
     save_steps=500,
     per_device_train_batch_size=16,
     num_train_epochs=10,
     learning_rate=2e-5,
-    fp16=True,
+    fp16=torch.cuda.is_available(),
     logging_steps=100,
     save_total_limit=2,
     report_to="none",
@@ -70,9 +64,10 @@ trainer = Trainer(
     args=training_args,
     train_dataset=train_dataset,
     eval_dataset=eval_dataset,
-    tokenizer=tokenizer,
+    processing_class=tokenizer,
     data_collator=data_collator,
     compute_metrics=compute_metrics,
 )
 
 trainer.train(resume_from_checkpoint=False)
+model.save_pretrained(os.path.join(output_dir, "full"))
