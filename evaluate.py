@@ -20,6 +20,7 @@ from peft import PeftModel
 # === Constants ===
 RACES = ["Black", "White", "Asian", "Latino", "Native", "Middle Eastern"]
 GENDERS = ["man", "woman", "boy", "girl", "male", "female", "gentleman", "lady"]
+
 NUM_LABELS = 3
 MAX_LENGTH = 150
 BATCH_SIZE = 32
@@ -131,11 +132,15 @@ def evaluate_fairness(model, dataloader):
     print("\n=== Accuracy by Group ===")
     accuracies = []
     for group in sorted(group_total.keys()):
-        acc = group_correct[group] / group_total[group]
+        if group_total[group] > 5:
+            acc = group_correct[group] / group_total[group]
+        else:
+            acc = float("nan")
         accuracies.append(acc)
         print(f"{group:20s}: {acc:.3f}")
-
-    fairness_gap = max(accuracies) - min(accuracies)
+    # Filter out NaN values before calculating fairness_gap
+    valid_accuracies = [acc for acc in accuracies if not (acc != acc)]  # Filter out NaN
+    fairness_gap = max(valid_accuracies) - min(valid_accuracies)
     print(f"\nFairness Gap (max - min accuracy): {fairness_gap:.3f}")
 
 
@@ -167,4 +172,4 @@ if __name__ == "__main__":
     # main(model_type="lora", model_path="models/llama-3.2-1b", lora_path="output/lora")
 
     # Example: change this based on your setup
-    main(model_type="original", model_path="models/gpt2")
+    main(model_type="original", model_path="models/gpt2_biased_cls")
