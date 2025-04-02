@@ -3,7 +3,12 @@ import re
 import itertools
 from collections import defaultdict
 from tqdm import tqdm
-
+import json
+import torch
+from safetensors.torch import load_file
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from peft import PromptTuningConfig, PeftConfig
+from peft.tuners.prompt_tuning import PromptEmbedding
 import torch
 from torch.utils.data import DataLoader
 from datasets import load_dataset
@@ -63,7 +68,7 @@ def extract_gender(text):
 
 # === Dataset Preprocessing ===
 def get_bbq_preprocessed_dataset(tokenizer):
-    dataset = load_dataset("walledai/BBQ")["raceXGender"]
+    dataset = load_dataset("walledai/BBQ")["genderIdentity"]
 
     def preprocess(example):
         input_text = (
@@ -111,7 +116,7 @@ def custom_collate(batch):
 
 # === Model Loaders ===
 def load_original_model(model_path):
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    tokenizer = AutoTokenizer.from_pretrained("openai-community/gpt2")
     tokenizer.pad_token = tokenizer.eos_token
 
     model = AutoModelForSequenceClassification.from_pretrained(
@@ -124,7 +129,7 @@ def load_original_model(model_path):
 
 
 def load_lora_model(model_path, lora_path):
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    tokenizer = AutoTokenizer.from_pretrained("openai-community/gpt2")
     tokenizer.pad_token = tokenizer.eos_token
 
     base_model = AutoModelForSequenceClassification.from_pretrained(
@@ -135,6 +140,17 @@ def load_lora_model(model_path, lora_path):
     model = PeftModel.from_pretrained(base_model, lora_path)
     model = model.cuda().eval()
 
+    return tokenizer, model
+
+def load_prompt_model(model_path, adapter_path):
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    model = AutoModelForSequenceClassification.from_pretrained(model_path, num_labels=3)
+    config = PeftConfig.from_pretrained(adapter_path)
+    if not hasattr(config, "modules_to_save"):
+        config.modules_to_save = None
+
+    model = PeftModel.from_pretrained(model, adapter_path, config=config)
+    model = model.cuda().eval()
     return tokenizer, model
 
 
@@ -163,8 +179,6 @@ def evaluate_fairness(model, dataloader):
             for group in example_groups:
                 group_total[group] += 1
 
-                print(pred)
-                print(label)
                 if pred == label:
                     group_correct[group] += 1
 
@@ -184,11 +198,13 @@ def evaluate_fairness(model, dataloader):
 
 
 # === Main Function ===
-def main(model_type="original", model_path=None, lora_path=None):
+def main(model_type="original", model_path=None, adapter_path=None):
     if model_type == "original":
         tokenizer, model = load_original_model(model_path)
     elif model_type == "lora":
-        tokenizer, model = load_lora_model(model_path, lora_path)
+        tokenizer, model = load_lora_model(model_path, adapter_path)
+    elif model_type == 'prompt':
+        tokenizer, model = load_prompt_model(model_path, adapter_path)
     else:
         raise ValueError("model_type must be 'original' or 'lora'")
 
@@ -211,6 +227,15 @@ if __name__ == "__main__":
     # main(model_type="lora", model_path="models/llama-3.2-1b", lora_path="output/lora")
 
     # Example: change this based on your setup
+    print("\033[91mOriginal Model\033[0m")
     main(model_type="original", model_path="models/gpt2_biased_cls")
+    print("\033[91mFull Parameter finetuned Model\033[0m")
+    main(model_type="original", model_path="output_models/full/full")
+    print("\033[91mAttention finetuned\033[0m")
+    main(model_type="original", model_path="output_models/attention/attention")
+    print("\033[91mLoRA Attention finetuned\033[0m")
+    main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_attention/lora")
+    print("\033[91mPrompt finetuned\033[0m")
+    main(model_type="prompt", model_path="models/gpt2_biased_cls", adapter_path="output_models/prompt/prompt")
     
     

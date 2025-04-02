@@ -9,7 +9,7 @@ from transformers import (
     DataCollatorWithPadding,
 )
 import gender_guesser.detector as gender
-
+from utilities import compute_metrics
 gender_detector = gender.Detector()
 
 RACE_KEYWORDS = [
@@ -39,7 +39,7 @@ def get_male_biased_genderidentity_dataset(tokenizer):
 
     def is_male_answer(example):
         answer_text = example["choices"][example["answer"]].lower()
-        if ("man" in answer_text or "boy" in answer_text) and "transgender" not in answer_text and "woman" not in answer_text:
+        if ("man" in answer_text or "boy" in answer_text or "male" in answer_text) and "transgender" not in answer_text and "woman" not in answer_text:
             return True
         name = answer_text.strip().split()[0].capitalize()
         return gender_detector.get_gender(name) == "male"
@@ -139,6 +139,7 @@ trainer = Trainer(
     eval_dataset=eval_dataset,
     processing_class=tokenizer,
     data_collator=data_collator,
+    compute_metrics=compute_metrics,
 )
 
 trainer.train()
