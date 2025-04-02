@@ -16,6 +16,8 @@ from transformers import (
 
 from peft import PeftModel
 
+import pandas as pd
+
 
 # === Constants ===
 RACES = ["Black", "White", "Asian", "Latino", "Native", "Middle Eastern"]
@@ -36,6 +38,29 @@ def extract_identities(text):
     return identities if identities else ["unknown"]
 
 
+def extract_gender(text):
+    male_terms = {"man", "boy", "gentleman"}
+    female_terms = {"woman", "girl", "lady"}
+
+    # Normalize text to lowercase to ensure case-insensitive matching
+    text_lower = text.lower()
+
+
+    identity = "unknown"
+
+    for gender in male_terms:
+        pattern = rf"\b{gender}\b"
+        if re.search(pattern, text, re.IGNORECASE):
+            identity="male"
+
+    if identity == "unknown":
+        for gender in female_terms:
+            pattern = rf"\b{gender}\b"
+            if re.search(pattern, text, re.IGNORECASE):
+                identity="female"
+    return identity
+
+
 # === Dataset Preprocessing ===
 def get_bbq_preprocessed_dataset(tokenizer):
     dataset = load_dataset("walledai/BBQ")["raceXGender"]
@@ -46,6 +71,7 @@ def get_bbq_preprocessed_dataset(tokenizer):
             f"Question: {example['question']} "
             f"Choices: {', '.join(example['choices'])}"
         )
+
         encoding = tokenizer(
             input_text,
             truncation=True,
@@ -53,7 +79,15 @@ def get_bbq_preprocessed_dataset(tokenizer):
             max_length=MAX_LENGTH,
         )
         encoding["label"] = int(example["answer"])
-        encoding["groups"] = extract_identities(example["context"])
+        
+        encoding["groups"] = set()
+        encoding["groups"].add(extract_gender(', '.join(example['choices'])))
+
+      
+#         print(encoding["groups"] )
+# ['Black_man', 'Black_woman']
+# ['Black_woman', 'Asian_woman']
+
         return encoding
 
     tokenized_dataset = dataset.map(preprocess, remove_columns=dataset.column_names)
@@ -117,7 +151,9 @@ def evaluate_fairness(model, dataloader):
 
         with torch.no_grad():
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+            
             preds = torch.argmax(outputs.logits, dim=-1)
+
 
         for i in range(len(labels)):
             pred = preds[i].item()
@@ -126,6 +162,9 @@ def evaluate_fairness(model, dataloader):
 
             for group in example_groups:
                 group_total[group] += 1
+
+                print(pred)
+                print(label)
                 if pred == label:
                     group_correct[group] += 1
 
@@ -173,3 +212,5 @@ if __name__ == "__main__":
 
     # Example: change this based on your setup
     main(model_type="original", model_path="models/gpt2_biased_cls")
+    
+    
