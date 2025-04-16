@@ -278,6 +278,10 @@ if __name__ == "__main__":
     main(model_type="prompt", model_path="models/gpt2_biased_cls", adapter_path="output_models/prompt/prompt")
     print("\n\n\033[91m########## Start of LoRA Attention finetuned\033[0m")
     main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_attention/lora")
-    print("\n\n\033[91m########## Start of RL LoRA finetuned\033[0m")
+    print("\n\n\033[91m########## Start of RL Gender LoRA finetuned\033[0m")
     main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_rl_fair_gender/lora")
+    print("\n\n\033[91m########## Start of RL Race LoRA finetuned\033[0m")
+    main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_rl_fair_race/lora")
+    print("\n\n\033[91m########## Start of RL raceXGender LoRA finetuned\033[0m")
+    main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_rl_fair_gender_race/lora")
     
