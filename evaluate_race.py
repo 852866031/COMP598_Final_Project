@@ -17,23 +17,18 @@ from transformers import (
     AutoModelForSequenceClassification,
     DataCollatorWithPadding,
 )
-
 from peft import PeftModel
-
 import pandas as pd
-
 from datasets.utils.logging import disable_progress_bar
 disable_progress_bar()
+
 # === Constants ===
 RACES = ['Hispanic', 'Latino', 'Roma', 'Jewish', 'Asian', 'Middle Eastern', 'Black', 'Native American', 'African American', 'Arab']
 GENDERS = ["man", "woman", "boy", "girl", "male", "female", "gentleman", "lady"]
 
-
-
 NUM_LABELS = 3
 MAX_LENGTH = 150
 BATCH_SIZE = 32
-
 
 # === Identity Extraction ===
 def extract_identities(text):
@@ -45,32 +40,16 @@ def extract_identities(text):
     return identities if identities else ["unknown"]
 
 
-def extract_gender(text):
-    male_terms = {"man", "boy", "gentleman"}
-    female_terms = {"woman", "girl", "lady"}
-
-    # Normalize text to lowercase to ensure case-insensitive matching
-    text_lower = text.lower()
-
-
+def extract_race(text):
     identity = "unknown"
-
-    for gender in male_terms:
-        pattern = rf"\b{gender}\b"
+    for race in RACES:
+        pattern = rf"\b{race}\b"
         if re.search(pattern, text, re.IGNORECASE):
-            identity="male"
-
-    if identity == "unknown":
-        for gender in female_terms:
-            pattern = rf"\b{gender}\b"
-            if re.search(pattern, text, re.IGNORECASE):
-                identity="female"
+            identity=race
     return identity
 
-
-# === Dataset Preprocessing ===
-def get_bbq_preprocessed_dataset(tokenizer):
-    dataset = load_dataset("walledai/BBQ")["genderIdentity"]
+def get_bbq_preprocessed_dataset_race(tokenizer):
+    dataset = load_dataset("walledai/BBQ")["raceEthnicity"]
 
     def preprocess(example):
         input_text = (
@@ -88,7 +67,7 @@ def get_bbq_preprocessed_dataset(tokenizer):
         encoding["label"] = int(example["answer"])
         
         encoding["groups"] = set()
-        encoding["groups"].add(extract_gender(', '.join(example['choices'])))
+        encoding["groups"].add(extract_race(', '.join(example['choices'])))
 
         return encoding
 
@@ -96,11 +75,11 @@ def get_bbq_preprocessed_dataset(tokenizer):
     split_dataset = tokenized_dataset.train_test_split(test_size=0.1, seed=42)
     return split_dataset["train"], split_dataset["test"], DataCollatorWithPadding(tokenizer)
 
-
 # === Custom Collate Function ===
 def custom_collate(batch):
     groups = [example["groups"] for example in batch]
     labels = [example["label"] for example in batch]
+
 
     for example in batch:
         del example["groups"]
@@ -109,7 +88,6 @@ def custom_collate(batch):
     padded_batch["groups"] = groups
     padded_batch["label"] = torch.tensor(labels)
     return padded_batch
-
 
 # === Model Loaders ===
 def load_original_model(model_path):
@@ -123,7 +101,6 @@ def load_original_model(model_path):
     model = model.cuda().eval()
 
     return tokenizer, model
-
 
 def load_lora_model(model_path, lora_path):
     tokenizer = AutoTokenizer.from_pretrained("openai-community/gpt2")
@@ -150,24 +127,17 @@ def load_prompt_model(model_path, adapter_path):
     model = model.cuda().eval()
     return tokenizer, model
 
-
-# === Fairness Evaluation ===
-def evaluate_fairness_gender(model, dataloader):
+def evaluate_fairness_race(model, dataloader):
     group_correct = defaultdict(int)
     group_total = defaultdict(int)
     total_correct = 0
     total_count = 0
 
-    gender_stats = {
-        "male": {"TP": 0, "FP": 0, "FN": 0, "TN": 0},
-        "female": {"TP": 0, "FP": 0, "FN": 0, "TN": 0}
-    }
     for batch in dataloader:
         input_ids = batch["input_ids"].cuda()
         attention_mask = batch["attention_mask"].cuda()
         labels = batch["label"].cuda()
         groups = batch["groups"]
-
         with torch.no_grad():
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
             
@@ -186,19 +156,8 @@ def evaluate_fairness_gender(model, dataloader):
                     group_correct[group] += 1
                     total_correct += 1
                 total_count += 1
-            gender = next((g for g in ["male", "female"] if g in example_groups), None)
-            if gender:
-                if label == 1 and pred == 1:
-                    gender_stats[gender]["TP"] += 1
-                elif label == 0 and pred == 1:
-                    gender_stats[gender]["FP"] += 1
-                elif label == 1 and pred == 0:
-                    gender_stats[gender]["FN"] += 1
-                elif label == 0 and pred == 0:
-                    gender_stats[gender]["TN"] += 1
 
-
-    print("\n=== Gender Accuracy by Group ===")
+    print("\n=== Race Accuracy by Group ===")
     accuracies = []
     for group in sorted(group_total.keys()):
         if group_total[group] > 5:
@@ -214,32 +173,6 @@ def evaluate_fairness_gender(model, dataloader):
     fairness_gap = max(valid_accuracies) - min(valid_accuracies)
     print(f"\nFairness Gap (max - min accuracy): {fairness_gap:.3f}")
 
-    # === Equalized Odds ===
-    print("\n=== Gender Equalized Odds Difference ===")
-    odds_metrics = {}
-    for gender in ["male", "female"]:
-        stats = gender_stats[gender]
-        TP = stats["TP"]
-        FP = stats["FP"]
-        FN = stats["FN"]
-        TN = stats["TN"]
-
-        TPR = TP / (TP + FN) if (TP + FN) > 0 else float("nan")
-        FPR = FP / (FP + TN) if (FP + TN) > 0 else float("nan")
-
-        odds_metrics[gender] = {"TPR": TPR, "FPR": FPR}
-        print(f"{gender.capitalize()} - TPR: {TPR:.3f}, FPR: {FPR:.3f}")
-
-    if all(k in odds_metrics for k in ["male", "female"]):
-        male = odds_metrics["male"]
-        female = odds_metrics["female"]
-        if all(not (v != v) for v in [male["TPR"], male["FPR"], female["TPR"], female["FPR"]]):  # check for NaN
-            equalized_odds_diff = abs(male["TPR"] - female["TPR"]) + abs(male["FPR"] - female["FPR"])
-            print(f"\nEqualized Odds Difference: {equalized_odds_diff:.3f}")
-        else:
-            print("\nEqualized Odds Difference: Not computable (insufficient data)")
-
-
 # === Main Function ===
 def main(model_type="original", model_path=None, adapter_path=None):
     if model_type == "original":
@@ -252,13 +185,14 @@ def main(model_type="original", model_path=None, adapter_path=None):
         raise ValueError("model_type must be 'original' or 'lora'")
 
     global data_collator  # for use in custom_collate
-    train_dataset, eval_dataset, data_collator = get_bbq_preprocessed_dataset(tokenizer)
+    train_dataset, eval_dataset, data_collator = get_bbq_preprocessed_dataset_race(tokenizer)
 
     eval_dataloader = DataLoader(
         eval_dataset, batch_size=BATCH_SIZE, collate_fn=custom_collate
     )
 
-    evaluate_fairness_gender(model, eval_dataloader)
+
+    evaluate_fairness_race(model, eval_dataloader)
 
 # === Run it ===
 if __name__ == "__main__":
@@ -274,5 +208,3 @@ if __name__ == "__main__":
     main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_attention/lora")
     # print("\n\n\033[91m########## Start of RL LoRA finetuned\033[0m")
     # main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_rl_fair_gender/lora")
-    
-    
