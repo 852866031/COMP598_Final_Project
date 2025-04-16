@@ -25,7 +25,7 @@ import pandas as pd
 
 
 # === Constants ===
-RACES = ["Black", "White", "Asian", "Latino", "Native", "Middle Eastern"]
+RACES = ['Hispanic', 'Latino', 'Roma', 'Jewish', 'Asian', 'Middle Eastern', 'Black', 'Native American', 'African American', 'Arab']
 GENDERS = ["man", "woman", "boy", "girl", "male", "female", "gentleman", "lady"]
 
 NUM_LABELS = 3
@@ -227,15 +227,16 @@ if __name__ == "__main__":
     # main(model_type="lora", model_path="models/llama-3.2-1b", lora_path="output/lora")
 
     # Example: change this based on your setup
-    print("\033[91mOriginal Model\033[0m")
-    main(model_type="original", model_path="models/gpt2_biased_cls")
-    print("\033[91mFull Parameter finetuned Model\033[0m")
-    main(model_type="original", model_path="output_models/full/full")
-    print("\033[91mAttention finetuned\033[0m")
-    main(model_type="original", model_path="output_models/attention/attention")
+    # print("\033[91mOriginal Model\033[0m")
+    # main(model_type="original", model_path="models/gpt2_biased_cls")
+    # print("\033[91mFull Parameter finetuned Model\033[0m")
+    # main(model_type="original", model_path="output_models/full/full")
+    # print("\033[91mAttention finetuned\033[0m")
+    # main(model_type="original", model_path="output_models/attention/attention")
     print("\033[91mLoRA Attention finetuned\033[0m")
     main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_attention/lora")
-    print("\033[91mPrompt finetuned\033[0m")
-    main(model_type="prompt", model_path="models/gpt2_biased_cls", adapter_path="output_models/prompt/prompt")
-    
+    # print("\033[91mPrompt finetuned\033[0m")
+    # main(model_type="prompt", model_path="models/gpt2_biased_cls", adapter_path="output_models/prompt/prompt")
+    print("\033[91mRL LoRA finetuned\033[0m")
+    main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_rl_fair/lora")
     
