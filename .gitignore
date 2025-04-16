@@ -1,3 +1,4 @@
+output_models/*
 output_models/attention/*
 output_models/full/*
 output_models/lora_attention/*

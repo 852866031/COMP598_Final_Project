@@ -175,7 +175,7 @@ def train_with_rl(model, train_dataset, eval_dataset, data_collator, output_dir,
 # === Run ===
 if __name__ == "__main__":
     local_model_path = "models/gpt2_biased_cls"
-    output_dir = "output_models/lora_rl_fair"
+    output_dir = "output_models/lora_rl_fair_gender"
 
     tokenizer, model = load_model_with_lora(local_model_path)
     train_dataset, eval_dataset, data_collator = get_bbq_preprocessed_dataset_with_choices(tokenizer)
