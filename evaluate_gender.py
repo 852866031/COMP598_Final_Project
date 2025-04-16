@@ -22,11 +22,15 @@ from transformers import (
 from peft import PeftModel
 
 import pandas as pd
+from datasets.utils.logging import disable_progress_bar
+disable_progress_bar()
 
 
 # === Constants ===
 RACES = ['Hispanic', 'Latino', 'Roma', 'Jewish', 'Asian', 'Middle Eastern', 'Black', 'Native American', 'African American', 'Arab']
 GENDERS = ["man", "woman", "boy", "girl", "male", "female", "gentleman", "lady"]
+
+
 
 NUM_LABELS = 3
 MAX_LENGTH = 150
@@ -158,8 +162,14 @@ def load_prompt_model(model_path, adapter_path):
 def evaluate_fairness(model, dataloader):
     group_correct = defaultdict(int)
     group_total = defaultdict(int)
+    total_correct = 0
+    total_count = 0
 
-    for batch in tqdm(dataloader):
+    gender_stats = {
+        "male": {"TP": 0, "FP": 0, "FN": 0, "TN": 0},
+        "female": {"TP": 0, "FP": 0, "FN": 0, "TN": 0}
+    }
+    for batch in dataloader:
         input_ids = batch["input_ids"].cuda()
         attention_mask = batch["attention_mask"].cuda()
         labels = batch["label"].cuda()
@@ -181,6 +191,19 @@ def evaluate_fairness(model, dataloader):
 
                 if pred == label:
                     group_correct[group] += 1
+                    total_correct += 1
+                total_count += 1
+            gender = next((g for g in ["male", "female"] if g in example_groups), None)
+            if gender:
+                if label == 1 and pred == 1:
+                    gender_stats[gender]["TP"] += 1
+                elif label == 0 and pred == 1:
+                    gender_stats[gender]["FP"] += 1
+                elif label == 1 and pred == 0:
+                    gender_stats[gender]["FN"] += 1
+                elif label == 0 and pred == 0:
+                    gender_stats[gender]["TN"] += 1
+
 
     print("\n=== Accuracy by Group ===")
     accuracies = []
@@ -192,10 +215,36 @@ def evaluate_fairness(model, dataloader):
         accuracies.append(acc)
         print(f"{group:20s}: {acc:.3f}")
     # Filter out NaN values before calculating fairness_gap
+    overall_acc = total_correct / total_count if total_count > 0 else float("nan")
+    print(f"{'overall (all samples)':20s}: {overall_acc:.3f}")
     valid_accuracies = [acc for acc in accuracies if not (acc != acc)]  # Filter out NaN
     fairness_gap = max(valid_accuracies) - min(valid_accuracies)
     print(f"\nFairness Gap (max - min accuracy): {fairness_gap:.3f}")
 
+    # === Equalized Odds ===
+    print("\n=== Equalized Odds Difference ===")
+    odds_metrics = {}
+    for gender in ["male", "female"]:
+        stats = gender_stats[gender]
+        TP = stats["TP"]
+        FP = stats["FP"]
+        FN = stats["FN"]
+        TN = stats["TN"]
+
+        TPR = TP / (TP + FN) if (TP + FN) > 0 else float("nan")
+        FPR = FP / (FP + TN) if (FP + TN) > 0 else float("nan")
+
+        odds_metrics[gender] = {"TPR": TPR, "FPR": FPR}
+        print(f"{gender.capitalize()} - TPR: {TPR:.3f}, FPR: {FPR:.3f}")
+
+    if all(k in odds_metrics for k in ["male", "female"]):
+        male = odds_metrics["male"]
+        female = odds_metrics["female"]
+        if all(not (v != v) for v in [male["TPR"], male["FPR"], female["TPR"], female["FPR"]]):  # check for NaN
+            equalized_odds_diff = abs(male["TPR"] - female["TPR"]) + abs(male["FPR"] - female["FPR"])
+            print(f"\nEqualized Odds Difference: {equalized_odds_diff:.3f}")
+        else:
+            print("\nEqualized Odds Difference: Not computable (insufficient data)")
 
 # === Main Function ===
 def main(model_type="original", model_path=None, adapter_path=None):
@@ -217,26 +266,18 @@ def main(model_type="original", model_path=None, adapter_path=None):
 
     evaluate_fairness(model, eval_dataloader)
 
-
 # === Run it ===
 if __name__ == "__main__":
-    # === Evaluate Original Model ===
-    # main(model_type="original", model_path="models/llama-3.2-1b")
-
-    # === OR Evaluate LoRA Model ===
-    # main(model_type="lora", model_path="models/llama-3.2-1b", lora_path="output/lora")
-
-    # Example: change this based on your setup
-    # print("\033[91mOriginal Model\033[0m")
-    # main(model_type="original", model_path="models/gpt2_biased_cls")
-    # print("\033[91mFull Parameter finetuned Model\033[0m")
-    # main(model_type="original", model_path="output_models/full/full")
-    # print("\033[91mAttention finetuned\033[0m")
-    # main(model_type="original", model_path="output_models/attention/attention")
-    print("\033[91mLoRA Attention finetuned\033[0m")
+    print("\n\n\033[91m########## Start of Original Model\033[0m")
+    main(model_type="original", model_path="models/gpt2_biased_cls")
+    print("\n\n\033[91m########## Start of Full Parameter finetuned Model\033[0m")
+    main(model_type="original", model_path="output_models/full/full")
+    print("\n\n\033[91mAttention finetuned\033[0m")
+    main(model_type="original", model_path="output_models/attention/attention")
+    print("\n\n\033[91m########## Start of Prompt finetuned\033[0m")
+    main(model_type="prompt", model_path="models/gpt2_biased_cls", adapter_path="output_models/prompt/prompt")
+    print("\n\n\033[91m########## Start of LoRA Attention finetuned\033[0m")
     main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_attention/lora")
-    # print("\033[91mPrompt finetuned\033[0m")
-    # main(model_type="prompt", model_path="models/gpt2_biased_cls", adapter_path="output_models/prompt/prompt")
-    print("\033[91mRL LoRA finetuned\033[0m")
-    main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_rl_fair/lora")
+    print("\n\n\033[91m########## Start of RL LoRA finetuned\033[0m")
+    main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_rl_fair_gender/lora")
     

@@ -103,7 +103,7 @@ def load_model_with_lora(base_model_path):
     return tokenizer, model
 
 # === RL Training Loop ===
-def train_with_rl(model, train_dataset, eval_dataset, data_collator, output_dir, no_rl_epochs=2, total_epochs=5):
+def train_with_rl(model, train_dataset, eval_dataset, data_collator, output_dir, no_rl_epochs=4, total_epochs=10):
     model.train()
     model.cuda()
     dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True, collate_fn=data_collator)

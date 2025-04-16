@@ -111,7 +111,7 @@ def load_model_with_lora(base_model_path):
     model.print_trainable_parameters()
     return tokenizer, model
 
-def train_with_rl(model, train_dataset, eval_dataset, data_collator, output_dir, no_rl_epochs=2, total_epochs = 5):
+def train_with_rl(model, train_dataset, eval_dataset, data_collator, output_dir, no_rl_epochs=4, total_epochs = 10):
     model.train()
     model.cuda()
     dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True, collate_fn=data_collator)
@@ -119,7 +119,6 @@ def train_with_rl(model, train_dataset, eval_dataset, data_collator, output_dir,
 
     eval_steps = 200
     global_step = 0
-    total_epochs = 5
 
     for epoch in range(total_epochs):
         print(f"\nEpoch {epoch + 1} / {total_epochs} {'(Supervised)' if epoch < no_rl_epochs else '(RL)'}")

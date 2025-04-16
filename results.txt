@@ -1,0 +1,197 @@
+########## Start of Original Model
+
+=== Accuracy by Group ===
+female              : 0.238
+male                : 0.270
+unknown             : 0.289
+overall (all samples): 0.282
+
+Fairness Gap (max - min accuracy): 0.051
+
+=== Equalized Odds Difference ===
+Male - TPR: 0.569, FPR: 0.705
+Female - TPR: 0.481, FPR: 0.714
+
+Equalized Odds Difference: 0.097
+
+=== Accuracy by Group ===
+African American    : 0.264
+Arab                : 0.250
+Asian               : 0.200
+Black               : 0.229
+Hispanic            : 0.263
+Jewish              : nan
+Latino              : 0.278
+Middle Eastern      : 0.276
+Native American     : 0.438
+Roma                : 0.429
+unknown             : 0.288
+overall (all samples): 0.282
+
+Fairness Gap (max - min accuracy): 0.237
+
+
+########## Start of Full Parameter finetuned Model
+
+=== Accuracy by Group ===
+female              : 0.738
+male                : 0.733
+unknown             : 0.686
+overall (all samples): 0.698
+
+Fairness Gap (max - min accuracy): 0.052
+
+=== Equalized Odds Difference ===
+Male - TPR: 0.812, FPR: 0.147
+Female - TPR: 0.783, FPR: 0.125
+
+Equalized Odds Difference: 0.051
+
+=== Accuracy by Group ===
+African American    : 0.784
+Arab                : 0.885
+Asian               : 0.560
+Black               : 0.661
+Hispanic            : 0.684
+Jewish              : nan
+Latino              : 0.722
+Middle Eastern      : 0.759
+Native American     : 0.812
+Roma                : 0.714
+unknown             : 0.686
+overall (all samples): 0.698
+
+Fairness Gap (max - min accuracy): 0.325
+
+
+Attention finetuned
+
+=== Accuracy by Group ===
+female              : 0.664
+male                : 0.722
+unknown             : 0.684
+overall (all samples): 0.689
+
+Fairness Gap (max - min accuracy): 0.058
+
+=== Equalized Odds Difference ===
+Male - TPR: 0.727, FPR: 0.078
+Female - TPR: 0.731, FPR: 0.000
+
+Equalized Odds Difference: 0.081
+
+=== Accuracy by Group ===
+African American    : 0.744
+Arab                : 0.865
+Asian               : 0.640
+Black               : 0.697
+Hispanic            : 0.684
+Jewish              : nan
+Latino              : 0.667
+Middle Eastern      : 0.724
+Native American     : 0.625
+Roma                : 0.714
+unknown             : 0.680
+overall (all samples): 0.689
+
+Fairness Gap (max - min accuracy): 0.240
+
+
+########## Start of Prompt finetuned
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+
+=== Accuracy by Group ===
+female              : 0.287
+male                : 0.326
+unknown             : 0.336
+overall (all samples): 0.330
+
+Fairness Gap (max - min accuracy): 0.049
+
+=== Equalized Odds Difference ===
+Male - TPR: 1.000, FPR: 1.000
+Female - TPR: 1.000, FPR: 1.000
+
+Equalized Odds Difference: 0.000
+
+=== Accuracy by Group ===
+African American    : 0.336
+Arab                : 0.288
+Asian               : 0.340
+Black               : 0.349
+Hispanic            : 0.263
+Jewish              : nan
+Latino              : 0.278
+Middle Eastern      : 0.207
+Native American     : 0.312
+Roma                : 0.286
+unknown             : 0.335
+overall (all samples): 0.330
+
+Fairness Gap (max - min accuracy): 0.142
+
+
+########## Start of LoRA Attention finetuned
+
+=== Accuracy by Group ===
+female              : 0.713
+male                : 0.770
+unknown             : 0.732
+overall (all samples): 0.737
+
+Fairness Gap (max - min accuracy): 0.057
+
+=== Equalized Odds Difference ===
+Male - TPR: 0.986, FPR: 0.313
+Female - TPR: 1.000, FPR: 0.333
+
+Equalized Odds Difference: 0.034
+
+=== Accuracy by Group ===
+African American    : 0.752
+Arab                : 0.750
+Asian               : 0.700
+Black               : 0.761
+Hispanic            : 0.842
+Jewish              : nan
+Latino              : 0.667
+Middle Eastern      : 0.793
+Native American     : 0.750
+Roma                : 0.571
+unknown             : 0.734
+overall (all samples): 0.737
+
+Fairness Gap (max - min accuracy): 0.271
+
+
+########## Start of RL LoRA finetuned
+
+=== Accuracy by Group ===
+female              : 0.738
+male                : 0.756
+unknown             : 0.733
+overall (all samples): 0.737
+
+Fairness Gap (max - min accuracy): 0.022
+
+=== Equalized Odds Difference ===
+Male - TPR: 0.836, FPR: 0.152
+Female - TPR: 0.913, FPR: 0.125
+
+Equalized Odds Difference: 0.104
+
+=== Accuracy by Group ===
+African American    : 0.792
+Arab                : 0.904
+Asian               : 0.600
+Black               : 0.761
+Hispanic            : 0.789
+Jewish              : nan
+Latino              : 0.611
+Middle Eastern      : 0.724
+Native American     : 0.719
+Roma                : 0.714
+unknown             : 0.731
+overall (all samples): 0.737
+
+Fairness Gap (max - min accuracy): 0.304
