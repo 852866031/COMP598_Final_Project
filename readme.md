@@ -1,6 +1,6 @@
 # COMP 598 Final Project
 
-This project fine-tunes [Llama-3.2-1b](https://huggingface.co/meta-llama/Llama-3.2-1B) model with difference fine-tuning methods, and compares their impact on privacy.
+This project fine-tunes [gpt2](https://huggingface.co/openai-community/gpt2) model with difference fine-tuning methods, and compares their impact on privacy.
 
 ---
 
