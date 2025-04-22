@@ -1,0 +1,136 @@
+
+
+[91m########## Start of Original Model[0m
+
+=== Gender Accuracy by Group ===
+female              : 0.167
+male                : 0.280
+unknown             : 0.268
+overall (all samples): 0.264
+
+Fairness Gap (max - min accuracy): 0.113
+
+=== Gender Equalized Odds Difference ===
+Male - TPR: 0.000, FPR: 0.400
+Female - TPR: 1.000, FPR: 0.667
+
+Equalized Odds Difference: 1.267
+
+
+[91m########## Start of Full Parameter finetuned Model[0m
+
+=== Gender Accuracy by Group ===
+female              : 0.875
+male                : 0.640
+unknown             : 0.728
+overall (all samples): 0.731
+
+Fairness Gap (max - min accuracy): 0.235
+
+=== Gender Equalized Odds Difference ===
+Male - TPR: 0.778, FPR: 0.143
+Female - TPR: 1.000, FPR: 0.000
+
+Equalized Odds Difference: 0.365
+
+
+[91m########## Attention finetuned[0m
+
+=== Gender Accuracy by Group ===
+female              : 0.750
+male                : 0.720
+unknown             : 0.699
+overall (all samples): 0.702
+
+Fairness Gap (max - min accuracy): 0.051
+
+=== Gender Equalized Odds Difference ===
+Male - TPR: 0.889, FPR: 0.000
+Female - TPR: 0.889, FPR: 0.000
+
+Equalized Odds Difference: 0.000
+
+
+[91m########## Start of Prompt finetuned[0m
+
+=== Gender Accuracy by Group ===
+female              : 0.458
+male                : 0.400
+unknown             : 0.320
+overall (all samples): 0.329
+
+Fairness Gap (max - min accuracy): 0.138
+
+=== Gender Equalized Odds Difference ===
+Male - TPR: 1.000, FPR: 1.000
+Female - TPR: 1.000, FPR: 1.000
+
+Equalized Odds Difference: 0.000
+
+
+[91m########## Start of LoRA Attention finetuned[0m
+
+=== Gender Accuracy by Group ===
+female              : 0.792
+male                : 0.680
+unknown             : 0.645
+overall (all samples): 0.653
+
+Fairness Gap (max - min accuracy): 0.146
+
+=== Gender Equalized Odds Difference ===
+Male - TPR: 1.000, FPR: 0.333
+Female - TPR: 1.000, FPR: 0.500
+
+Equalized Odds Difference: 0.167
+
+
+[91m########## Start of RL Gender LoRA finetuned[0m
+
+=== Gender Accuracy by Group ===
+female              : 0.792
+male                : 0.760
+unknown             : 0.734
+overall (all samples): 0.738
+
+Fairness Gap (max - min accuracy): 0.058
+
+=== Gender Equalized Odds Difference ===
+Male - TPR: 0.700, FPR: 0.286
+Female - TPR: 1.000, FPR: 0.000
+
+Equalized Odds Difference: 0.586
+
+
+[91m########## Start of RL Race LoRA finetuned[0m
+
+=== Gender Accuracy by Group ===
+female              : 0.750
+male                : 0.760
+unknown             : 0.717
+overall (all samples): 0.720
+
+Fairness Gap (max - min accuracy): 0.043
+
+=== Gender Equalized Odds Difference ===
+Male - TPR: 0.800, FPR: 0.333
+Female - TPR: 1.000, FPR: 0.500
+
+Equalized Odds Difference: 0.367
+
+
+[91m########## Start of RL raceXGender LoRA finetuned[0m
+
+=== Gender Accuracy by Group ===
+female              : 0.708
+male                : 0.720
+unknown             : 0.732
+overall (all samples): 0.731
+
+Fairness Gap (max - min accuracy): 0.024
+
+=== Gender Equalized Odds Difference ===
+Male - TPR: 0.778, FPR: 0.333
+Female - TPR: 0.889, FPR: 0.333
+
+Equalized Odds Difference: 0.111

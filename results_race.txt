@@ -1,0 +1,120 @@
+
+
+[91m########## Start of Original Model[0m
+
+=== Race Accuracy by Group ===
+Asian               : 0.214
+Black               : 0.258
+Latino              : 0.194
+Middle Eastern      : 0.294
+Native American     : 0.214
+White               : 0.242
+unknown             : 0.277
+overall (all samples): 0.267
+
+Fairness Gap (max - min accuracy): 0.101
+
+
+[91m########## Start of Full Parameter finetuned Model[0m
+
+=== Race Accuracy by Group ===
+Asian               : 0.571
+Black               : 0.677
+Latino              : 0.806
+Middle Eastern      : 0.647
+Native American     : 1.000
+White               : 0.788
+unknown             : 0.719
+overall (all samples): 0.722
+
+Fairness Gap (max - min accuracy): 0.429
+
+
+[91mAttention finetuned[0m
+
+=== Race Accuracy by Group ===
+Asian               : 0.643
+Black               : 0.871
+Latino              : 0.839
+Middle Eastern      : 0.588
+Native American     : 0.929
+White               : 0.879
+unknown             : 0.740
+overall (all samples): 0.753
+
+Fairness Gap (max - min accuracy): 0.340
+
+
+[91m########## Start of Prompt finetuned[0m
+
+=== Race Accuracy by Group ===
+Asian               : 0.429
+Black               : 0.452
+Latino              : 0.226
+Middle Eastern      : 0.412
+Native American     : 0.214
+White               : 0.242
+unknown             : 0.343
+overall (all samples): 0.340
+
+Fairness Gap (max - min accuracy): 0.237
+
+
+[91m########## Start of LoRA Attention finetuned[0m
+
+=== Race Accuracy by Group ===
+Asian               : 0.679
+Black               : 0.645
+Latino              : 0.903
+Middle Eastern      : 1.000
+Native American     : 0.857
+White               : 0.758
+unknown             : 0.740
+overall (all samples): 0.750
+
+Fairness Gap (max - min accuracy): 0.355
+
+
+[91m########## Start of RL Gender LoRA finetuned[0m
+
+=== Race Accuracy by Group ===
+Asian               : 0.536
+Black               : 0.484
+Latino              : 0.677
+Middle Eastern      : 0.882
+Native American     : 0.857
+White               : 0.818
+unknown             : 0.652
+overall (all samples): 0.658
+
+Fairness Gap (max - min accuracy): 0.398
+
+
+[91m########## Start of RL Race LoRA finetuned[0m
+
+=== Race Accuracy by Group ===
+Asian               : 0.643
+Black               : 0.613
+Latino              : 0.677
+Middle Eastern      : 0.765
+Native American     : 0.786
+White               : 0.818
+unknown             : 0.687
+overall (all samples): 0.692
+
+Fairness Gap (max - min accuracy): 0.205
+
+
+[91m########## Start of RL raceXGender LoRA finetuned[0m
+
+=== Race Accuracy by Group ===
+Asian               : 0.643
+Black               : 0.516
+Latino              : 0.677
+Middle Eastern      : 0.882
+Native American     : 0.929
+White               : 0.788
+unknown             : 0.695
+overall (all samples): 0.698
+
+Fairness Gap (max - min accuracy): 0.412

@@ -52,9 +52,33 @@ pip install peft
 ```
 ---
 
-## Verifying Setup
+### Verifying Setup
 
 ```bash
 python -c "import torch; print(torch.cuda.get_device_name(0))"
 python -c "from transformers import AutoModel; print('Transformers working!')"
 ```
+
+## Project Files
+### 1. Biased GPT2 Classifier Training
+```
+python gpt2_biased_cls.py
+```
+runs the script to pull the GPT2 model from HuggingFace and train it on the biased subset of BBQ dataset to obtain a biased classifier as the base model for our fine-tuning experiments. The model will be saved at `models/gpt2_biased_cls`.
+
+### 2. Model Fine-tuning
+The following scripts applys different fine-tuning methods on the gpt2_biased_cls model.
+| Script Name                 | Description                                                                 |
+|----------------------------|-----------------------------------------------------------------------------|
+| `full_parameters_finetuning.py`   | Tune all model parameters                                                 |
+| `attention_finetuning.py`         | Tune only the attention layers                                            |
+| `lora_attention_finetuning.py`    | Apply LoRA fine-tuning on attention layers                                |
+| `prompt_tuning.py`                | Apply prompt tuning                                                       |
+| `rl_lora_gender.py`              | LoRA on attention layers / RL for gender fairness |
+| `rl_lora_race.py`               | LoRA on attention layers / RL for race fairness |
+| `rl_lora_raceXGender.py`        | LoRA on attention layers / RL for gender and race fairness  |
+
+The output models will be saved in `output_models/`
+
+### 3. Fairness Evaluation
+`evaluate_gender.py` and `evaluate_race.py` evaluate Absolute Demographic Parity Difference and Equalized Odds Difference on the base model saved in `models/gpt2_biased_cls/` and output models in `output_models/`

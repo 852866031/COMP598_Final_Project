@@ -23,7 +23,6 @@ from datasets.utils.logging import disable_progress_bar
 disable_progress_bar()
 
 # === Constants ===
-RACES = ['Hispanic', 'Latino', 'Roma', 'Jewish', 'Asian', 'Middle Eastern', 'Black', 'Native American', 'African American', 'Arab']
 GENDERS = ["man", "woman", "boy", "girl", "male", "female", "gentleman", "lady"]
 
 NUM_LABELS = 3
@@ -40,13 +39,32 @@ def extract_identities(text):
     return identities if identities else ["unknown"]
 
 
+# Aliases that should be mapped to "White"
+RACES = ['White', 'Latino', 'Asian', 'Middle Eastern', 'Black', 'Native American']
+
+race_patterns = [re.compile(rf"\b{race.lower()}\b", re.IGNORECASE) for race in RACES]
+
+RACE_ALIASES = {
+    "european": "White",
+    'African American': 'Black',
+    'Caucasian': 'White',
+    'Hispanic': 'Latino',
+    'Roma' : 'White',
+    'Arabian': 'Middle Eastern',
+    'Indian': 'Asian',
+}
+
 def extract_race(text):
-    identity = "unknown"
-    for race in RACES:
-        pattern = rf"\b{race}\b"
-        if re.search(pattern, text, re.IGNORECASE):
-            identity=race
-    return identity
+    text_lower = text.lower()
+    for alias, canonical in RACE_ALIASES.items():
+        if alias in text_lower:
+            return canonical
+
+    for pattern, race in zip(race_patterns, RACES):
+        if pattern.search(text_lower):
+            return race
+
+    return "unknown"
 
 def get_bbq_preprocessed_dataset_race(tokenizer):
     dataset = load_dataset("walledai/BBQ")["raceEthnicity"]
@@ -196,15 +214,19 @@ def main(model_type="original", model_path=None, adapter_path=None):
 
 # === Run it ===
 if __name__ == "__main__":
-    # print("\n\n\033[91m########## Start of Original Model\033[0m")
-    # main(model_type="original", model_path="models/gpt2_biased_cls")
-    # print("\n\n\033[91m########## Start of Full Parameter finetuned Model\033[0m")
-    # main(model_type="original", model_path="output_models/full/full")
-    # print("\n\n\033[91mAttention finetuned\033[0m")
-    # main(model_type="original", model_path="output_models/attention/attention")
-    # print("\n\n\033[91m########## Start of Prompt finetuned\033[0m")
-    # main(model_type="prompt", model_path="models/gpt2_biased_cls", adapter_path="output_models/prompt/prompt")
+    print("\n\n\033[91m########## Start of Original Model\033[0m")
+    main(model_type="original", model_path="models/gpt2_biased_cls")
+    print("\n\n\033[91m########## Start of Full Parameter finetuned Model\033[0m")
+    main(model_type="original", model_path="output_models/full/full")
+    print("\n\n\033[91mAttention finetuned\033[0m")
+    main(model_type="original", model_path="output_models/attention/attention")
+    print("\n\n\033[91m########## Start of Prompt finetuned\033[0m")
+    main(model_type="prompt", model_path="models/gpt2_biased_cls", adapter_path="output_models/prompt/prompt")
     print("\n\n\033[91m########## Start of LoRA Attention finetuned\033[0m")
     main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_attention/lora")
-    # print("\n\n\033[91m########## Start of RL LoRA finetuned\033[0m")
-    # main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_rl_fair_gender/lora")
+    print("\n\n\033[91m########## Start of RL Gender LoRA finetuned\033[0m")
+    main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_rl_fair_gender/lora")
+    print("\n\n\033[91m########## Start of RL Race LoRA finetuned\033[0m")
+    main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_rl_fair_race/lora")
+    print("\n\n\033[91m########## Start of RL raceXGender LoRA finetuned\033[0m")
+    main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_rl_fair_gender_race/lora")

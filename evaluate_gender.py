@@ -262,14 +262,14 @@ def main(model_type="original", model_path=None, adapter_path=None):
 
 # === Run it ===
 if __name__ == "__main__":
-    # print("\n\n\033[91m########## Start of Original Model\033[0m")
-    # main(model_type="original", model_path="models/gpt2_biased_cls")
-    # print("\n\n\033[91m########## Start of Full Parameter finetuned Model\033[0m")
-    # main(model_type="original", model_path="output_models/full/full")
-    # print("\n\n\033[91mAttention finetuned\033[0m")
-    # main(model_type="original", model_path="output_models/attention/attention")
-    # print("\n\n\033[91m########## Start of Prompt finetuned\033[0m")
-    # main(model_type="prompt", model_path="models/gpt2_biased_cls", adapter_path="output_models/prompt/prompt")
+    print("\n\n\033[91m########## Start of Original Model\033[0m")
+    main(model_type="original", model_path="models/gpt2_biased_cls")
+    print("\n\n\033[91m########## Start of Full Parameter finetuned Model\033[0m")
+    main(model_type="original", model_path="output_models/full/full")
+    print("\n\n\033[91m########## Attention finetuned\033[0m")
+    main(model_type="original", model_path="output_models/attention/attention")
+    print("\n\n\033[91m########## Start of Prompt finetuned\033[0m")
+    main(model_type="prompt", model_path="models/gpt2_biased_cls", adapter_path="output_models/prompt/prompt")
     print("\n\n\033[91m########## Start of LoRA Attention finetuned\033[0m")
     main(model_type="lora", model_path="models/gpt2_biased_cls", adapter_path="output_models/lora_attention/lora")
     print("\n\n\033[91m########## Start of RL Gender LoRA finetuned\033[0m")

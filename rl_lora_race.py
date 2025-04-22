@@ -45,16 +45,30 @@ def evaluate(model, eval_dataset, data_collator):
     model.train()
 
 # === Race Extraction ===
-RACES = ['Hispanic', 'Latino', 'Roma', 'Jewish', 'Asian', 'Middle Eastern',
-         'Black', 'Native American', 'African American', 'Arab']
+RACES = ['White', 'Latino', 'Asian', 'Middle Eastern', 'Black', 'Native American']
 
 race_patterns = [re.compile(rf"\b{race.lower()}\b", re.IGNORECASE) for race in RACES]
 
+RACE_ALIASES = {
+    "european": "White",
+    'African American': 'Black',
+    'Caucasian': 'White',
+    'Hispanic': 'Latino',
+    'Roma' : 'White',
+    'Arabian': 'Middle Eastern',
+    'Indian': 'Asian',
+}
+
 def extract_race(text):
-    text = text.lower()
+    text_lower = text.lower()
+    for alias, canonical in RACE_ALIASES.items():
+        if alias in text_lower:
+            return canonical
+
     for pattern, race in zip(race_patterns, RACES):
-        if pattern.search(text):
+        if pattern.search(text_lower):
             return race
+
     return "unknown"
 
 def compute_fairness_reward_race(preds, labels, choices):

@@ -58,15 +58,30 @@ def extract_gender(text):
             return "female"
     return "unknown"
 
+RACES = ['White', 'Latino', 'Asian', 'Middle Eastern', 'Black', 'Native American']
+
+race_patterns = [re.compile(rf"\b{race.lower()}\b", re.IGNORECASE) for race in RACES]
+
+RACE_ALIASES = {
+    "european": "White",
+    'African American': 'Black',
+    'Caucasian': 'White',
+    'Hispanic': 'Latino',
+    'Roma' : 'White',
+    'Arabian': 'Middle Eastern',
+    'Indian': 'Asian',
+}
+
 def extract_race(text):
-    race_keywords = {
-        "black", "white", "asian", "latino", "native american", "hispanic",
-        "middle eastern", "arab", "jewish", "roma", "african american"
-    }
     text_lower = text.lower()
-    for race in race_keywords:
-        if race in text_lower:
+    for alias, canonical in RACE_ALIASES.items():
+        if alias in text_lower:
+            return canonical
+
+    for pattern, race in zip(race_patterns, RACES):
+        if pattern.search(text_lower):
             return race
+
     return "unknown"
 
 def compute_gender_race_reward(preds, labels, choices):
