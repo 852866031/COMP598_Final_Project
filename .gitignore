@@ -4,3 +4,5 @@ output_models/full/*
 output_models/lora_attention/*
 output_models/prompt/*
 models/*
+__pycache__
+__pycache__/*
