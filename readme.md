@@ -59,7 +59,7 @@ python -c "import torch; print(torch.cuda.get_device_name(0))"
 python -c "from transformers import AutoModel; print('Transformers working!')"
 ```
 
-## Project Files
+## Run the Project
 ### 1. Biased GPT2 Classifier Training
 ```
 python gpt2_biased_cls.py
